@@ -54,6 +54,18 @@ Use this checklist after starting both services. It verifies all required MVP be
 11. Select **Add task**, leave the title empty, and submit. Expect the message **Enter a task title.**
 12. Stop the backend and refresh the browser. Expect a helpful API error with a **Try again** button. Restart the backend and select **Try again**; expect the dashboard to recover.
 
+## Optional enhancement checks
+
+The following approved Phase 4 enhancements are local and deterministic; they do not send task data to an external AI service.
+
+1. Start creating a task titled `Urgent review proposal`. Expect **Suggested priority: high** below the title field.
+2. Try `Email project update` or `Schedule meeting`. Expect a **medium** suggestion. A neutral title such as `Organize bookshelf` should suggest **low**.
+3. Save a task titled `Prepare demo`, then start another task with the same title (case and extra spaces do not matter). Expect a warning that a similar task exists. Saving remains available; it never silently merges or deletes tasks.
+4. Set a due date when creating or editing a task. Expect it to appear as a due-date badge in the list.
+5. Give a pending task yesterday's date. Expect an **Overdue** label. Give it today's date. Expect **Due today**. Completed tasks do not show overdue styling.
+6. Choose **Due date** in the Order selector. Expect dated tasks first, from the nearest date onward; undated tasks appear last.
+7. Select **Calendar**. Expect tasks grouped under their due dates. Select **List** to return to the normal dashboard.
+
 For direct API verification, open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs). The health check, task routes, category routes, and summary endpoint are interactive there.
 
 ## Quality commands
@@ -90,6 +102,8 @@ Do not edit generated migration history to hide a schema change. The initial `20
 - Create, list, edit, delete, complete, and reopen tasks.
 - Create categories, assign them to tasks, and filter the task dashboard by category.
 - View total, completed, remaining, and completion-percentage summary metrics.
+- Deterministic priority suggestions and non-blocking duplicate-task warnings.
+- Optional due dates with overdue/due-today labels, due-date ordering, and a simple calendar view.
 - Persistent SQLite task storage managed through Alembic migrations.
 - React dashboard with loading, empty, and API-error states.
 - FastAPI task API and interactive API documentation.

@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock("../../lib/api", () => ({
   createTask: mocks.createTask,
   getTask: vi.fn(),
+  getTaskInsights: vi.fn().mockResolvedValue({ suggested_priority: "low", duplicates: [] }),
   listCategories: vi.fn().mockResolvedValue([
     { id: 4, name: "Work", created_at: "2026-09-03T00:00:00Z" },
   ]),
@@ -25,7 +26,7 @@ it("creates a task with its selected category", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Save task" }));
 
   await waitFor(() => {
-    expect(mocks.createTask).toHaveBeenCalledWith({ title: "Prepare demo", description: "", category_id: 4 });
+    expect(mocks.createTask).toHaveBeenCalledWith({ title: "Prepare demo", description: "", category_id: 4, due_date: null });
   });
 });
 

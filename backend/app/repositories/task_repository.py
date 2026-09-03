@@ -36,3 +36,8 @@ def get_summary(database: Session) -> tuple[int, int]:
     )
     total, completed = database.execute(select(func.count(Task.id), completed_expression)).one()
     return int(total), int(completed)
+
+
+def list_task_titles(database: Session) -> list[Task]:
+    statement = select(Task).order_by(Task.id)
+    return list(database.scalars(statement))

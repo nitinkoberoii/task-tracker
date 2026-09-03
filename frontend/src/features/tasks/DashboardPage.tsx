@@ -10,6 +10,8 @@ export function DashboardPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [sortOrder, setSortOrder] = useState("created");
+  const [view, setView] = useState<"list" | "calendar">("list");
 
   const loadTasks = useCallback(async () => {
     setIsLoading(true);
@@ -64,7 +66,12 @@ export function DashboardPage() {
     }
   }
 
-  const visibleTasks = categoryFilter === "all" ? tasks : tasks.filter((task) => task.category?.id === Number(categoryFilter));
+  const visibleTasks = [...(categoryFilter === "all" ? tasks : tasks.filter((task) => task.category?.id === Number(categoryFilter)))].sort(
+    (left, right) => sortOrder === "due" ? (left.due_date ?? "9999-12-31").localeCompare(right.due_date ?? "9999-12-31") : 0
+  );
+
+  const today = new Date().toISOString().slice(0, 10);
+  const calendarDays = [...new Set(visibleTasks.filter((task) => task.due_date).map((task) => task.due_date!))].sort();
 
   return (
     <section className="page-card">
@@ -78,14 +85,15 @@ export function DashboardPage() {
         </Link>
       </div>
       {summary && <div className="summary-grid" aria-label="Task summary"><div><span>Total</span><strong>{summary.total}</strong></div><div><span>Completed</span><strong>{summary.completed}</strong></div><div><span>Remaining</span><strong>{summary.remaining}</strong></div><div><span>Progress</span><strong>{summary.completion_percentage}%</strong></div></div>}
-      <div className="category-tools"><label htmlFor="category-filter">Category <select id="category-filter" onChange={(event) => setCategoryFilter(event.target.value)} value={categoryFilter}><option value="all">All categories</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label><div className="category-create"><label htmlFor="new-category">New category</label><input id="new-category" maxLength={80} onChange={(event) => setNewCategoryName(event.target.value)} value={newCategoryName} /><button className="button button--secondary" onClick={() => void addCategory()} type="button">Add category</button></div></div>
+      <div className="category-tools"><label htmlFor="category-filter">Category <select id="category-filter" onChange={(event) => setCategoryFilter(event.target.value)} value={categoryFilter}><option value="all">All categories</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label><label htmlFor="task-sort">Order <select id="task-sort" onChange={(event) => setSortOrder(event.target.value)} value={sortOrder}><option value="created">Recently created</option><option value="due">Due date</option></select></label><div className="view-toggle"><button aria-pressed={view === "list"} className="button button--secondary" onClick={() => setView("list")} type="button">List</button><button aria-pressed={view === "calendar"} className="button button--secondary" onClick={() => setView("calendar")} type="button">Calendar</button></div><div className="category-create"><label htmlFor="new-category">New category</label><input id="new-category" maxLength={80} onChange={(event) => setNewCategoryName(event.target.value)} value={newCategoryName} /><button className="button button--secondary" onClick={() => void addCategory()} type="button">Add category</button></div></div>
       {error && <div className="message message--error" role="alert"><p>{error}</p><button className="button button--secondary" onClick={() => void loadTasks()} type="button">Try again</button></div>}
       {isLoading && <p aria-live="polite" className="status-message">Loading tasks...</p>}
       {!isLoading && !error && tasks.length === 0 && <div className="empty-state"><h2>No tasks yet</h2><p>Add your first task to get started.</p><Link className="button button--primary" to="/tasks/new">Add your first task</Link></div>}
       {!isLoading && tasks.length > 0 && visibleTasks.length === 0 && <div className="empty-state"><h2>No matching tasks</h2><p>Try another category or choose All categories.</p></div>}
-      {!isLoading && visibleTasks.length > 0 && <ul className="task-list" aria-label="Tasks">
+      {!isLoading && view === "calendar" && visibleTasks.length > 0 && <div className="calendar-view" aria-label="Due date calendar">{calendarDays.length === 0 ? <p>No due dates yet. Add one while editing a task.</p> : calendarDays.map((day) => <section key={day}><h2>{day === today ? "Today" : day}</h2><ul>{visibleTasks.filter((task) => task.due_date === day).map((task) => <li key={task.id}>{task.title} {task.category && <span>({task.category.name})</span>}</li>)}</ul></section>)}</div>}
+      {!isLoading && view === "list" && visibleTasks.length > 0 && <ul className="task-list" aria-label="Tasks">
         {visibleTasks.map((task) => <li className={`task-item ${task.status === "completed" ? "task-item--completed" : ""}`} key={task.id}>
-          <label className="task-toggle"><input checked={task.status === "completed"} onChange={() => void toggleTask(task)} type="checkbox" /><span><strong>{task.title}</strong>{task.category && <em className="category-badge">{task.category.name}</em>}{task.description && <small>{task.description}</small>}</span></label>
+          <label className="task-toggle"><input checked={task.status === "completed"} onChange={() => void toggleTask(task)} type="checkbox" /><span><strong>{task.title}</strong>{task.category && <em className="category-badge">{task.category.name}</em>}{task.due_date && <em className={`due-badge ${task.status !== "completed" && task.due_date < today ? "due-badge--overdue" : task.due_date === today ? "due-badge--today" : ""}`}>{task.status !== "completed" && task.due_date < today ? "Overdue: " : task.due_date === today ? "Due today" : `Due: ${task.due_date}`}</em>}{task.description && <small>{task.description}</small>}</span></label>
           <div className="task-actions"><Link className="text-button" to={`/tasks/${task.id}/edit`}>Edit</Link><button className="text-button text-button--danger" onClick={() => void removeTask(task)} type="button">Delete</button></div>
         </li>)}
       </ul>}

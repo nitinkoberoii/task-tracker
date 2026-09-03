@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { createTask, getTask, listCategories, type Category, updateTask } from "../../lib/api";
+import { createTask, getTask, getTaskInsights, listCategories, type Category, type TaskInsights, updateTask } from "../../lib/api";
 
 type TaskFormPageProps = { mode: "create" | "edit" };
 
@@ -15,17 +15,30 @@ export function TaskFormPage({ mode }: TaskFormPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [insights, setInsights] = useState<TaskInsights | null>(null);
 
   useEffect(() => {
     const taskRequest = mode === "edit" && Number.isInteger(taskId) ? getTask(taskId) : Promise.resolve(null);
     Promise.all([taskRequest, listCategories()])
       .then(([task, loadedCategories]) => {
         setCategories(loadedCategories);
-        if (task) { setTitle(task.title); setDescription(task.description ?? ""); setCategoryId(task.category?.id.toString() ?? ""); }
+        if (task) { setTitle(task.title); setDescription(task.description ?? ""); setCategoryId(task.category?.id.toString() ?? ""); setDueDate(task.due_date ?? ""); }
       })
       .catch(() => setError("This task could not be loaded."))
       .finally(() => setIsLoading(false));
   }, [mode, taskId]);
+
+  useEffect(() => {
+    const normalizedTitle = title.trim();
+    if (!normalizedTitle) return;
+    const insightTimer = window.setTimeout(() => {
+      getTaskInsights(normalizedTitle, mode === "edit" ? taskId : undefined)
+        .then(setInsights)
+        .catch(() => setInsights(null));
+    }, 250);
+    return () => window.clearTimeout(insightTimer);
+  }, [mode, taskId, title]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -38,9 +51,9 @@ export function TaskFormPage({ mode }: TaskFormPageProps) {
     setError(null);
     try {
       if (mode === "create") {
-        await createTask({ title: normalizedTitle, description, category_id: categoryId ? Number(categoryId) : null });
+        await createTask({ title: normalizedTitle, description, category_id: categoryId ? Number(categoryId) : null, due_date: dueDate || null });
       } else {
-        await updateTask(taskId, { title: normalizedTitle, description, category_id: categoryId ? Number(categoryId) : null });
+        await updateTask(taskId, { title: normalizedTitle, description, category_id: categoryId ? Number(categoryId) : null, due_date: dueDate || null });
       }
       navigate("/");
     } catch {
@@ -59,10 +72,13 @@ export function TaskFormPage({ mode }: TaskFormPageProps) {
       <form className="task-form" onSubmit={(event) => void submit(event)}>
         <label htmlFor="task-title">Title</label>
         <input autoFocus id="task-title" maxLength={200} onChange={(event) => setTitle(event.target.value)} required value={title} />
+        {title.trim() && insights && <div className={`insight insight--${insights.suggested_priority}`} aria-live="polite"><strong>Suggested priority: {insights.suggested_priority}</strong>{insights.duplicates.length > 0 && <p>Similar task already exists: {insights.duplicates.map((task) => task.title).join(", ")}. You can still save this task.</p>}</div>}
         <label htmlFor="task-description">Description <span className="optional">(optional)</span></label>
         <textarea id="task-description" maxLength={5000} onChange={(event) => setDescription(event.target.value)} rows={5} value={description} />
         <label htmlFor="task-category">Category <span className="optional">(optional)</span></label>
         <select id="task-category" onChange={(event) => setCategoryId(event.target.value)} value={categoryId}><option value="">No category</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select>
+        <label htmlFor="task-due-date">Due date <span className="optional">(optional)</span></label>
+        <input id="task-due-date" onChange={(event) => setDueDate(event.target.value)} type="date" value={dueDate} />
         {error && <p className="form-error" role="alert">{error}</p>}
         <div className="form-actions"><button className="button button--primary" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Save task"}</button><Link className="button button--secondary" to="/">Cancel</Link></div>
       </form>

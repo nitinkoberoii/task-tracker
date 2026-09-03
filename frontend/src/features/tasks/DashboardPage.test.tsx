@@ -12,8 +12,8 @@ vi.mock("../../lib/api", () => ({
     { id: 2, name: "Work", created_at: "2026-09-03T00:00:00Z" },
   ]),
   listTasks: vi.fn().mockResolvedValue([
-    { id: 1, title: "Buy groceries", description: null, status: "pending", category: { id: 1, name: "Personal" } },
-    { id: 2, title: "Send update", description: "Weekly status", status: "completed", category: { id: 2, name: "Work" } },
+    { id: 1, title: "Buy groceries", description: null, status: "pending", due_date: null, category: { id: 1, name: "Personal" } },
+    { id: 2, title: "Send update", description: "Weekly status", status: "completed", due_date: null, category: { id: 2, name: "Work" } },
   ]),
   updateTask: vi.fn(),
 }));

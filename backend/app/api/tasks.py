@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import date, datetime
+from typing import Literal
 
 from fastapi import APIRouter, Depends, Response, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -16,6 +17,7 @@ class TaskCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     description: str | None = Field(default=None, max_length=5000)
     category_id: int | None = None
+    due_date: date | None = None
 
     @field_validator("title")
     @classmethod
@@ -30,6 +32,7 @@ class TaskUpdate(BaseModel):
     description: str | None = Field(default=None, max_length=5000)
     status: TaskStatus | None = None
     category_id: int | None = None
+    due_date: date | None = None
 
     @field_validator("title")
     @classmethod
@@ -50,6 +53,7 @@ class TaskResponse(BaseModel):
     updated_at: datetime
     completed_at: datetime | None
     category: CategoryResponse | None
+    due_date: date | None
 
 
 @router.get("", response_model=list[TaskResponse])
@@ -64,7 +68,9 @@ def create_task(payload: TaskCreate, database: Session = Depends(get_db)) -> Tas
         if payload.category_id
         else None
     )
-    return task_service.create_task(database, payload.title, payload.description, category)
+    return task_service.create_task(
+        database, payload.title, payload.description, category, payload.due_date
+    )
 
 
 class SummaryResponse(BaseModel):
@@ -77,6 +83,27 @@ class SummaryResponse(BaseModel):
 @router.get("/summary", response_model=SummaryResponse)
 def get_summary(database: Session = Depends(get_db)) -> SummaryResponse:
     return task_service.get_summary(database)
+
+
+class DuplicateTaskResponse(BaseModel):
+    id: int
+    title: str
+
+
+class TaskInsightsResponse(BaseModel):
+    suggested_priority: Literal["high", "medium", "low"]
+    duplicates: list[DuplicateTaskResponse]
+
+
+@router.get("/insights", response_model=TaskInsightsResponse)
+def get_task_insights(
+    title: str = "", exclude_task_id: int | None = None, database: Session = Depends(get_db)
+) -> TaskInsightsResponse:
+    duplicates = task_service.find_duplicate_tasks(database, title, exclude_task_id)
+    return TaskInsightsResponse(
+        suggested_priority=task_service.suggest_priority(title),
+        duplicates=[DuplicateTaskResponse(id=task.id, title=task.title) for task in duplicates],
+    )
 
 
 @router.get("/{task_id}", response_model=TaskResponse)
@@ -100,6 +127,8 @@ def update_task(
         category_service.get_category_or_404(database, payload.category_id)
         if payload.category_id is not None
         else None,
+        "due_date" in updates,
+        payload.due_date if "due_date" in updates else None,
     )
 
 

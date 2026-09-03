@@ -16,6 +16,7 @@ export type Task = {
   updated_at: string;
   completed_at: string | null;
   category: Category | null;
+  due_date: string | null;
 };
 
 export type Category = { id: number; name: string; created_at: string };
@@ -25,6 +26,12 @@ export type TaskInput = {
   title: string;
   description?: string | null;
   category_id?: number | null;
+  due_date?: string | null;
+};
+
+export type TaskInsights = {
+  suggested_priority: "high" | "medium" | "low";
+  duplicates: Array<{ id: number; title: string }>;
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -69,3 +76,8 @@ export function deleteTask(taskId: number): Promise<void> {
 export function listCategories(): Promise<Category[]> { return request<Category[]>("/api/categories"); }
 export function createCategory(name: string): Promise<Category> { return request<Category>("/api/categories", { method: "POST", body: JSON.stringify({ name }) }); }
 export function getSummary(): Promise<Summary> { return request<Summary>("/api/tasks/summary"); }
+export function getTaskInsights(title: string, excludeTaskId?: number): Promise<TaskInsights> {
+  const parameters = new URLSearchParams({ title });
+  if (excludeTaskId) parameters.set("exclude_task_id", excludeTaskId.toString());
+  return request<TaskInsights>(`/api/tasks/insights?${parameters.toString()}`);
+}
