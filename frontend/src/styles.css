@@ -1,0 +1,71 @@
+:root {
+  color: #0f172a;
+  background: #f8fafc;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; min-width: 320px; }
+
+a { color: inherit; }
+
+.app-shell { margin: 0 auto; max-width: 1120px; padding: 32px 16px; }
+
+.app-header, .page-heading { align-items: center; display: flex; gap: 24px; justify-content: space-between; }
+
+.app-header { margin-bottom: 40px; }
+
+.brand { font-size: 1.5rem; font-weight: 750; text-decoration: none; }
+
+.eyebrow { color: #64748b; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; margin: 0 0 6px; text-transform: uppercase; }
+
+.health { border-radius: 999px; font-size: 0.875rem; font-weight: 600; margin: 0; padding: 8px 12px; }
+.health--checking { background: #e2e8f0; color: #334155; }
+.health--healthy { background: #dcfce7; color: #166534; }
+.health--unavailable { background: #fee2e2; color: #b91c1c; }
+
+.page-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 12px 32px rgb(15 23 42 / 0.06); padding: 32px; }
+.narrow-card { max-width: 640px; }
+h1, h2, p { margin-top: 0; }
+h1 { font-size: clamp(1.75rem, 4vw, 2rem); margin-bottom: 8px; }
+h2 { font-size: 1.125rem; }
+p { color: #475569; line-height: 1.5; }
+.empty-state { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; margin-top: 32px; padding: 24px; }
+.button { border-radius: 8px; display: inline-block; font-weight: 700; padding: 10px 16px; text-decoration: none; }
+.button:focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
+.button--primary { background: #4f46e5; color: #fff; }
+.button--primary:hover { background: #4338ca; }
+.button--secondary { background: #e2e8f0; color: #0f172a; margin-top: 8px; }
+.button { border: 0; cursor: pointer; font: inherit; }
+.button:disabled { cursor: wait; opacity: 0.65; }
+.status-message { margin-top: 32px; }
+.message { align-items: center; border-radius: 12px; display: flex; gap: 16px; justify-content: space-between; margin-top: 24px; padding: 16px; }
+.message p { margin: 0; }
+.message--error { background: #fef2f2; border: 1px solid #fecaca; }
+.task-list { display: grid; gap: 12px; list-style: none; margin: 32px 0 0; padding: 0; }
+.task-item { align-items: center; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; gap: 16px; justify-content: space-between; padding: 16px; }
+.task-toggle { align-items: flex-start; cursor: pointer; display: flex; flex: 1; gap: 12px; }
+.task-toggle input { accent-color: #4f46e5; block-size: 18px; inline-size: 18px; margin-top: 2px; }
+.task-toggle strong, .task-toggle small { display: block; }
+.task-toggle small { color: #64748b; margin-top: 4px; white-space: pre-wrap; }
+.task-item--completed strong { color: #64748b; text-decoration: line-through; }
+.task-actions { display: flex; gap: 12px; }
+.text-button { background: transparent; border: 0; color: #4338ca; cursor: pointer; font: inherit; font-weight: 700; padding: 4px; text-decoration: underline; }
+.text-button--danger { color: #b91c1c; }
+.task-form { display: grid; gap: 8px; }
+.task-form label { font-weight: 700; }
+.task-form input, .task-form textarea { border: 1px solid #94a3b8; border-radius: 8px; font: inherit; padding: 10px 12px; }
+.task-form input:focus, .task-form textarea:focus { border-color: #4f46e5; outline: 3px solid rgb(37 99 235 / 0.25); }
+.optional { color: #64748b; font-weight: 400; }
+.form-error { color: #b91c1c; margin: 4px 0; }
+.form-actions { display: flex; gap: 12px; margin-top: 12px; }
+
+@media (max-width: 600px) {
+  .app-shell { padding-top: 20px; }
+  .app-header, .page-heading { align-items: flex-start; flex-direction: column; }
+  .app-header { gap: 16px; margin-bottom: 24px; }
+  .page-card { padding: 24px; }
+  .task-item { align-items: flex-start; flex-direction: column; }
+}
