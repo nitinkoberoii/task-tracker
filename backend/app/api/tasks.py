@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.api.categories import CategoryResponse
 from app.db import get_db
 from app.models.task import TaskStatus
-from app.services import category_service, task_service
+from app.services import category_service, task_service, task_summary_service
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -81,9 +81,19 @@ class SummaryResponse(BaseModel):
     completion_percentage: float
 
 
+class AiSummaryResponse(BaseModel):
+    summary: str
+
+
 @router.get("/summary", response_model=SummaryResponse)
 def get_summary(database: Session = Depends(get_db)) -> SummaryResponse:
     return task_service.get_summary(database)
+
+
+@router.get("/ai-summary", response_model=AiSummaryResponse)
+def get_ai_summary(database: Session = Depends(get_db)) -> AiSummaryResponse:
+    tasks = task_service.list_tasks(database)
+    return AiSummaryResponse(summary=task_summary_service.summarize_tasks(tasks))
 
 
 class DuplicateTaskResponse(BaseModel):

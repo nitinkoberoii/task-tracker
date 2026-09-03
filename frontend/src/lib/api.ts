@@ -34,6 +34,7 @@ export type TaskInsights = {
   suggested_priority: "high" | "medium" | "low";
   duplicates: Array<{ id: number; title: string }>;
 };
+export type AiSummary = { summary: string };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${apiBaseUrl}${path}`, {
@@ -42,7 +43,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new Error("The request could not be completed. Please try again.");
+    const payload: unknown = await response.json().catch(() => null);
+    const detail = typeof payload === "object" && payload !== null && "detail" in payload && typeof payload.detail === "string"
+      ? payload.detail
+      : "The request could not be completed. Please try again.";
+    throw new Error(detail);
   }
 
   if (response.status === 204) return undefined as T;
@@ -85,3 +90,4 @@ export function getTaskInsights(title: string, excludeTaskId?: number): Promise<
 export function reorderTasks(taskIds: number[]): Promise<Task[]> {
   return request<Task[]>("/api/tasks/order", { method: "PUT", body: JSON.stringify({ task_ids: taskIds }) });
 }
+export function getAiSummary(): Promise<AiSummary> { return request<AiSummary>("/api/tasks/ai-summary"); }

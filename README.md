@@ -22,6 +22,16 @@ uv run alembic upgrade head
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
+To enable the optional AI summary, add your Groq key to `backend/.env` after copying the example file:
+
+```text
+GROQ_API_KEY=your_key_here
+# Optional; the default is openai/gpt-oss-20b
+GROQ_MODEL=openai/gpt-oss-20b
+```
+
+Never commit `backend/.env` or put this key in a frontend environment file. Restart the backend after changing it.
+
 The health endpoint is available at [http://127.0.0.1:8000/api/health](http://127.0.0.1:8000/api/health). The interactive API documentation is at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
 
 On macOS/Linux, use `cp .env.example .env` instead of `Copy-Item`.
@@ -56,7 +66,7 @@ Use this checklist after starting both services. It verifies all required MVP be
 
 ## Optional enhancement checks
 
-The following approved Phase 4 enhancements are local and deterministic; they do not send task data to an external AI service.
+The priority suggestion, duplicate warning, due-date, calendar, login, and reordering enhancements are local and deterministic. The AI summary is opt-in and sends the displayed task information to Groq only when you select its button.
 
 1. Start creating a task titled `Urgent review proposal`. Expect **Suggested priority: high** below the title field.
 2. Try `Email project update` or `Schedule meeting`. Expect a **medium** suggestion. A neutral title such as `Organize bookshelf` should suggest **low**.
@@ -65,6 +75,8 @@ The following approved Phase 4 enhancements are local and deterministic; they do
 5. Give a pending task yesterday's date. Expect an **Overdue** label. Give it today's date. Expect **Due today**. Completed tasks do not show overdue styling.
 6. Choose **Due date** in the Order selector. Expect dated tasks first, from the nearest date onward; undated tasks appear last.
 7. Select **Calendar**. Expect tasks grouped under their due dates. Select **List** to return to the normal dashboard.
+8. With `GROQ_API_KEY` set and the backend restarted, select **Summarize tasks**. Expect a short task overview with progress, time-sensitive work, and suggested next actions. The summary card explains exactly which task information is sent to Groq.
+9. Temporarily remove `GROQ_API_KEY` and restart the backend, then select **Summarize tasks**. Expect an actionable configuration message rather than a blank or misleading summary.
 
 ## Demo login and task ordering
 
@@ -117,7 +129,8 @@ Do not edit generated migration history to hide a schema change. The initial `20
 - View total, completed, remaining, and completion-percentage summary metrics.
 - Deterministic priority suggestions and non-blocking duplicate-task warnings.
 - Optional due dates with overdue/due-today labels, due-date ordering, and a simple calendar view.
-- Demo-only local login gate and persistent task ordering with drag-and-drop plus keyboard-accessible controls.
+- Demo-only local login gate and persistent task ordering with drag-and-drop.
+- Optional on-demand Groq AI task summaries; the key stays server-side and task data is sent only after the user selects **Summarize tasks**.
 - Persistent SQLite task storage managed through Alembic migrations.
 - React dashboard with loading, empty, and API-error states.
 - FastAPI task API and interactive API documentation.

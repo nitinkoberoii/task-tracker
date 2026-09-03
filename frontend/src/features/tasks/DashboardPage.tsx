@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { createCategory, deleteTask, getSummary, listCategories, listTasks, reorderTasks, type Category, type Summary, type Task, updateTask } from "../../lib/api";
+import { createCategory, deleteTask, getAiSummary, getSummary, listCategories, listTasks, reorderTasks, type Category, type Summary, type Task, updateTask } from "../../lib/api";
 
 export function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -13,6 +13,9 @@ export function DashboardPage() {
   const [sortOrder, setSortOrder] = useState("created");
   const [view, setView] = useState<"list" | "calendar">("list");
   const [draggedTaskId, setDraggedTaskId] = useState<number | null>(null);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [isSummarizing, setIsSummarizing] = useState(false);
 
   const loadTasks = useCallback(async () => {
     setIsLoading(true);
@@ -67,6 +70,19 @@ export function DashboardPage() {
     }
   }
 
+  async function summarizeTasks() {
+    setIsSummarizing(true);
+    setAiError(null);
+    try {
+      setAiSummary((await getAiSummary()).summary);
+    } catch (summaryError) {
+      setAiSummary(null);
+      setAiError(summaryError instanceof Error ? summaryError.message : "The AI summary could not be generated. Please try again.");
+    } finally {
+      setIsSummarizing(false);
+    }
+  }
+
   async function persistOrder(nextTasks: Task[]) {
     const previousTasks = tasks;
     setTasks(nextTasks);
@@ -109,6 +125,12 @@ export function DashboardPage() {
         </Link>
       </div>
       {summary && <div className="summary-grid" aria-label="Task summary"><div><span>Total</span><strong>{summary.total}</strong></div><div><span>Completed</span><strong>{summary.completed}</strong></div><div><span>Remaining</span><strong>{summary.remaining}</strong></div><div><span>Progress</span><strong>{summary.completion_percentage}%</strong></div></div>}
+      <section className="ai-summary" aria-labelledby="ai-summary-heading">
+        <div className="ai-summary__heading"><div><h2 id="ai-summary-heading">AI task summary</h2><p>Get a quick view of progress and next actions.</p></div><button className="button button--secondary" disabled={isSummarizing} onClick={() => void summarizeTasks()} type="button">{isSummarizing ? "Summarizing..." : "Summarize tasks"}</button></div>
+        <p className="ai-summary__disclosure">Task titles, descriptions, categories, statuses, and due dates are sent to Groq only when you request a summary.</p>
+        {aiError && <p className="form-error" role="alert">{aiError}</p>}
+        {aiSummary && <p className="ai-summary__content" aria-live="polite">{aiSummary}</p>}
+      </section>
       <div className="category-tools"><label htmlFor="category-filter">Category <select id="category-filter" onChange={(event) => setCategoryFilter(event.target.value)} value={categoryFilter}><option value="all">All categories</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label><label htmlFor="task-sort">Order <select id="task-sort" onChange={(event) => setSortOrder(event.target.value)} value={sortOrder}><option value="created">Recently created</option><option value="due">Due date</option></select></label><div className="view-toggle"><button aria-pressed={view === "list"} className="button button--secondary" onClick={() => setView("list")} type="button">List</button><button aria-pressed={view === "calendar"} className="button button--secondary" onClick={() => setView("calendar")} type="button">Calendar</button></div><div className="category-create"><label htmlFor="new-category">New category</label><input id="new-category" maxLength={80} onChange={(event) => setNewCategoryName(event.target.value)} value={newCategoryName} /><button className="button button--secondary" onClick={() => void addCategory()} type="button">Add category</button></div></div>
       {error && <div className="message message--error" role="alert"><p>{error}</p><button className="button button--secondary" onClick={() => void loadTasks()} type="button">Try again</button></div>}
       {isLoading && <p aria-live="polite" className="status-message">Loading tasks...</p>}
