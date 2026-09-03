@@ -8,7 +8,7 @@ def list_tasks(database: Session) -> list[Task]:
     statement = (
         select(Task)
         .options(joinedload(Task.category))
-        .order_by(Task.created_at.desc(), Task.id.desc())
+        .order_by(Task.position, Task.id)
     )
     return list(database.scalars(statement))
 
@@ -41,3 +41,14 @@ def get_summary(database: Session) -> tuple[int, int]:
 def list_task_titles(database: Session) -> list[Task]:
     statement = select(Task).order_by(Task.id)
     return list(database.scalars(statement))
+
+
+def next_position(database: Session) -> int:
+    maximum_position = database.scalar(select(func.max(Task.position)))
+    return int(maximum_position) + 1 if maximum_position is not None else 0
+
+
+def save_task_order(database: Session, tasks: list[Task]) -> None:
+    for position, task in enumerate(tasks):
+        task.position = position
+    database.commit()

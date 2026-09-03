@@ -66,6 +66,19 @@ The following approved Phase 4 enhancements are local and deterministic; they do
 6. Choose **Due date** in the Order selector. Expect dated tasks first, from the nearest date onward; undated tasks appear last.
 7. Select **Calendar**. Expect tasks grouped under their due dates. Select **List** to return to the normal dashboard.
 
+## Demo login and task ordering
+
+The app includes a deliberately limited demo login screen:
+
+```text
+Email: demo@tasktracker.local
+Password: demo123
+```
+
+This is not real authentication. The credentials are visible in the source, no server identity is created, and the app only stores a local browser session flag. It exists solely to demonstrate a gated user flow.
+
+After signing in, use the default **List** view with **All categories** and **Recently created** selected to reorder tasks. Drag a task card onto another task card. Refresh the page and expect the new order to remain. Reordering is intentionally disabled while a category filter, due-date ordering, or Calendar view is active so the saved global order is unambiguous.
+
 For direct API verification, open [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs). The health check, task routes, category routes, and summary endpoint are interactive there.
 
 ## Quality commands
@@ -104,6 +117,7 @@ Do not edit generated migration history to hide a schema change. The initial `20
 - View total, completed, remaining, and completion-percentage summary metrics.
 - Deterministic priority suggestions and non-blocking duplicate-task warnings.
 - Optional due dates with overdue/due-today labels, due-date ordering, and a simple calendar view.
+- Demo-only local login gate and persistent task ordering with drag-and-drop plus keyboard-accessible controls.
 - Persistent SQLite task storage managed through Alembic migrations.
 - React dashboard with loading, empty, and API-error states.
 - FastAPI task API and interactive API documentation.

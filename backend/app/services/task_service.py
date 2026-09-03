@@ -42,6 +42,7 @@ def create_task(
         description=normalize_description(description),
         category=category,
         due_date=due_date,
+        position=task_repository.next_position(database),
     )
     return task_repository.save_task(database, task)
 
@@ -107,3 +108,17 @@ def find_duplicate_tasks(database: Session, title: str, exclude_task_id: int | N
         for task in task_repository.list_task_titles(database)
         if task.id != exclude_task_id and normalize_title(task.title).casefold() == normalized
     ]
+
+
+def reorder_tasks(database: Session, task_ids: list[int]) -> list[Task]:
+    tasks = list_tasks(database)
+    existing_ids = {task.id for task in tasks}
+    if len(task_ids) != len(existing_ids) or set(task_ids) != existing_ids:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Task order must include every task exactly once.",
+        )
+    task_by_id = {task.id: task for task in tasks}
+    ordered_tasks = [task_by_id[task_id] for task_id in task_ids]
+    task_repository.save_task_order(database, ordered_tasks)
+    return ordered_tasks

@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { App } from "./app/App";
+import { DemoAuthProvider } from "./app/DemoAuth";
 import "./styles.css";
 
 const rootElement = document.getElementById("root");
@@ -12,8 +13,6 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <DemoAuthProvider><BrowserRouter><App /></BrowserRouter></DemoAuthProvider>
   </StrictMode>,
 );

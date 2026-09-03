@@ -17,6 +17,7 @@ export type Task = {
   completed_at: string | null;
   category: Category | null;
   due_date: string | null;
+  position: number;
 };
 
 export type Category = { id: number; name: string; created_at: string };
@@ -80,4 +81,7 @@ export function getTaskInsights(title: string, excludeTaskId?: number): Promise<
   const parameters = new URLSearchParams({ title });
   if (excludeTaskId) parameters.set("exclude_task_id", excludeTaskId.toString());
   return request<TaskInsights>(`/api/tasks/insights?${parameters.toString()}`);
+}
+export function reorderTasks(taskIds: number[]): Promise<Task[]> {
+  return request<Task[]>("/api/tasks/order", { method: "PUT", body: JSON.stringify({ task_ids: taskIds }) });
 }

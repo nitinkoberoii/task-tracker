@@ -32,3 +32,14 @@ def test_low_priority_is_suggested_without_keywords() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"suggested_priority": "low", "duplicates": []}
+
+
+def test_task_order_is_persisted() -> None:
+    client = TestClient(app)
+    first = client.post("/api/tasks", json={"title": "First"}).json()
+    second = client.post("/api/tasks", json={"title": "Second"}).json()
+
+    reordered = client.put("/api/tasks/order", json={"task_ids": [second["id"], first["id"]]})
+    assert reordered.status_code == 200
+    assert [task["id"] for task in reordered.json()] == [second["id"], first["id"]]
+    assert [task["id"] for task in client.get("/api/tasks").json()] == [second["id"], first["id"]]

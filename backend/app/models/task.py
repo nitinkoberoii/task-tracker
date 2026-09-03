@@ -2,7 +2,7 @@ from datetime import date, datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, Enum, ForeignKey, String, Text, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -23,6 +23,7 @@ class Task(Base):
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     due_date: Mapped[date | None] = mapped_column(nullable=True)
+    position: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     category_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id"), nullable=True)
     status: Mapped[TaskStatus] = mapped_column(
         Enum(TaskStatus, native_enum=False), default=TaskStatus.PENDING, nullable=False

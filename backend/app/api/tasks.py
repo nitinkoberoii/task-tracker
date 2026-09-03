@@ -54,6 +54,7 @@ class TaskResponse(BaseModel):
     completed_at: datetime | None
     category: CategoryResponse | None
     due_date: date | None
+    position: int
 
 
 @router.get("", response_model=list[TaskResponse])
@@ -95,6 +96,10 @@ class TaskInsightsResponse(BaseModel):
     duplicates: list[DuplicateTaskResponse]
 
 
+class TaskOrderUpdate(BaseModel):
+    task_ids: list[int]
+
+
 @router.get("/insights", response_model=TaskInsightsResponse)
 def get_task_insights(
     title: str = "", exclude_task_id: int | None = None, database: Session = Depends(get_db)
@@ -104,6 +109,13 @@ def get_task_insights(
         suggested_priority=task_service.suggest_priority(title),
         duplicates=[DuplicateTaskResponse(id=task.id, title=task.title) for task in duplicates],
     )
+
+
+@router.put("/order", response_model=list[TaskResponse])
+def reorder_tasks(
+    payload: TaskOrderUpdate, database: Session = Depends(get_db)
+) -> list[TaskResponse]:
+    return task_service.reorder_tasks(database, payload.task_ids)
 
 
 @router.get("/{task_id}", response_model=TaskResponse)
