@@ -4,9 +4,10 @@ from fastapi import APIRouter, Depends, Response, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy.orm import Session
 
+from app.api.categories import CategoryResponse
 from app.db import get_db
 from app.models.task import TaskStatus
-from app.services import task_service
+from app.services import category_service, task_service
 
 router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -14,6 +15,7 @@ router = APIRouter(prefix="/tasks", tags=["tasks"])
 class TaskCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     description: str | None = Field(default=None, max_length=5000)
+    category_id: int | None = None
 
     @field_validator("title")
     @classmethod
@@ -27,6 +29,7 @@ class TaskUpdate(BaseModel):
     title: str | None = Field(default=None, min_length=1, max_length=200)
     description: str | None = Field(default=None, max_length=5000)
     status: TaskStatus | None = None
+    category_id: int | None = None
 
     @field_validator("title")
     @classmethod
@@ -46,6 +49,7 @@ class TaskResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     completed_at: datetime | None
+    category: CategoryResponse | None
 
 
 @router.get("", response_model=list[TaskResponse])
@@ -55,7 +59,24 @@ def list_tasks(database: Session = Depends(get_db)) -> list[TaskResponse]:
 
 @router.post("", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
 def create_task(payload: TaskCreate, database: Session = Depends(get_db)) -> TaskResponse:
-    return task_service.create_task(database, payload.title, payload.description)
+    category = (
+        category_service.get_category_or_404(database, payload.category_id)
+        if payload.category_id
+        else None
+    )
+    return task_service.create_task(database, payload.title, payload.description, category)
+
+
+class SummaryResponse(BaseModel):
+    total: int
+    completed: int
+    remaining: int
+    completion_percentage: float
+
+
+@router.get("/summary", response_model=SummaryResponse)
+def get_summary(database: Session = Depends(get_db)) -> SummaryResponse:
+    return task_service.get_summary(database)
 
 
 @router.get("/{task_id}", response_model=TaskResponse)
@@ -75,6 +96,10 @@ def update_task(
         payload.title if "title" in updates else None,
         payload.description if "description" in updates else None,
         payload.status if "status" in updates else None,
+        "category_id" in updates,
+        category_service.get_category_or_404(database, payload.category_id)
+        if payload.category_id is not None
+        else None,
     )
 
 

@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { createTask, getTask, updateTask } from "../../lib/api";
+import { createTask, getTask, listCategories, type Category, updateTask } from "../../lib/api";
 
 type TaskFormPageProps = { mode: "create" | "edit" };
 
@@ -13,13 +13,15 @@ export function TaskFormPage({ mode }: TaskFormPageProps) {
   const [isLoading, setIsLoading] = useState(mode === "edit");
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryId, setCategoryId] = useState("");
 
   useEffect(() => {
-    if (mode !== "edit" || !Number.isInteger(taskId)) return;
-    getTask(taskId)
-      .then((task) => {
-        setTitle(task.title);
-        setDescription(task.description ?? "");
+    const taskRequest = mode === "edit" && Number.isInteger(taskId) ? getTask(taskId) : Promise.resolve(null);
+    Promise.all([taskRequest, listCategories()])
+      .then(([task, loadedCategories]) => {
+        setCategories(loadedCategories);
+        if (task) { setTitle(task.title); setDescription(task.description ?? ""); setCategoryId(task.category?.id.toString() ?? ""); }
       })
       .catch(() => setError("This task could not be loaded."))
       .finally(() => setIsLoading(false));
@@ -36,9 +38,9 @@ export function TaskFormPage({ mode }: TaskFormPageProps) {
     setError(null);
     try {
       if (mode === "create") {
-        await createTask({ title: normalizedTitle, description });
+        await createTask({ title: normalizedTitle, description, category_id: categoryId ? Number(categoryId) : null });
       } else {
-        await updateTask(taskId, { title: normalizedTitle, description });
+        await updateTask(taskId, { title: normalizedTitle, description, category_id: categoryId ? Number(categoryId) : null });
       }
       navigate("/");
     } catch {
@@ -48,7 +50,7 @@ export function TaskFormPage({ mode }: TaskFormPageProps) {
     }
   }
 
-  if (isLoading) return <p className="status-message">Loading task...</p>;
+  if (isLoading) return <p aria-live="polite" className="status-message">Loading task...</p>;
 
   return (
     <section className="page-card narrow-card">
@@ -59,6 +61,8 @@ export function TaskFormPage({ mode }: TaskFormPageProps) {
         <input autoFocus id="task-title" maxLength={200} onChange={(event) => setTitle(event.target.value)} required value={title} />
         <label htmlFor="task-description">Description <span className="optional">(optional)</span></label>
         <textarea id="task-description" maxLength={5000} onChange={(event) => setDescription(event.target.value)} rows={5} value={description} />
+        <label htmlFor="task-category">Category <span className="optional">(optional)</span></label>
+        <select id="task-category" onChange={(event) => setCategoryId(event.target.value)} value={categoryId}><option value="">No category</option>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select>
         {error && <p className="form-error" role="alert">{error}</p>}
         <div className="form-actions"><button className="button button--primary" disabled={isSaving} type="submit">{isSaving ? "Saving..." : "Save task"}</button><Link className="button button--secondary" to="/">Cancel</Link></div>
       </form>

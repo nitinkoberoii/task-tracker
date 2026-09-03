@@ -57,10 +57,22 @@ p { color: #475569; line-height: 1.5; }
 .task-form { display: grid; gap: 8px; }
 .task-form label { font-weight: 700; }
 .task-form input, .task-form textarea { border: 1px solid #94a3b8; border-radius: 8px; font: inherit; padding: 10px 12px; }
-.task-form input:focus, .task-form textarea:focus { border-color: #4f46e5; outline: 3px solid rgb(37 99 235 / 0.25); }
+.task-form select, .category-tools input, .category-tools select { border: 1px solid #94a3b8; border-radius: 8px; font: inherit; padding: 10px 12px; }
+.task-form input:focus, .task-form textarea:focus, .task-form select:focus, .category-tools input:focus, .category-tools select:focus { border-color: #4f46e5; outline: 3px solid rgb(37 99 235 / 0.25); }
 .optional { color: #64748b; font-weight: 400; }
 .form-error { color: #b91c1c; margin: 4px 0; }
 .form-actions { display: flex; gap: 12px; margin-top: 12px; }
+.summary-grid { display: grid; gap: 12px; grid-template-columns: repeat(4, 1fr); margin-top: 28px; }
+.summary-grid div { background: #eef2ff; border-radius: 10px; padding: 14px; }
+.summary-grid span, .summary-grid strong { display: block; }
+.summary-grid span { color: #475569; font-size: 0.8rem; }
+.summary-grid strong { font-size: 1.25rem; margin-top: 4px; }
+.category-tools { align-items: end; display: flex; gap: 16px; justify-content: space-between; margin-top: 24px; }
+.category-tools label, .category-create { display: grid; font-weight: 700; gap: 6px; }
+.category-create { align-items: end; grid-template-columns: auto 1fr auto; }
+.category-create label { grid-column: 1 / -1; }
+.category-create .button { margin: 0; }
+.category-badge { background: #e0e7ff; border-radius: 999px; color: #3730a3; font-size: 0.75rem; font-style: normal; font-weight: 700; margin-left: 8px; padding: 3px 8px; }
 
 @media (max-width: 600px) {
   .app-shell { padding-top: 20px; }
@@ -68,4 +80,6 @@ p { color: #475569; line-height: 1.5; }
   .app-header { gap: 16px; margin-bottom: 24px; }
   .page-card { padding: 24px; }
   .task-item { align-items: flex-start; flex-direction: column; }
+  .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .category-tools { align-items: stretch; flex-direction: column; }
 }

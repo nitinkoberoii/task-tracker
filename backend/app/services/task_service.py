@@ -3,6 +3,7 @@ from datetime import UTC, datetime
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.models.category import Category
 from app.models.task import Task, TaskStatus
 from app.repositories import task_repository
 
@@ -29,8 +30,14 @@ def get_task_or_404(database: Session, task_id: int) -> Task:
     return task
 
 
-def create_task(database: Session, title: str, description: str | None) -> Task:
-    task = Task(title=normalize_title(title), description=normalize_description(description))
+def create_task(
+    database: Session, title: str, description: str | None, category: Category | None
+) -> Task:
+    task = Task(
+        title=normalize_title(title),
+        description=normalize_description(description),
+        category=category,
+    )
     return task_repository.save_task(database, task)
 
 
@@ -40,6 +47,8 @@ def update_task(
     title: str | None,
     description: str | None,
     status_value: TaskStatus | None,
+    category_updated: bool,
+    category: Category | None,
 ) -> Task:
     if title is not None:
         task.title = normalize_title(title)
@@ -48,8 +57,22 @@ def update_task(
     if status_value is not None and task.status != status_value:
         task.status = status_value
         task.completed_at = datetime.now(UTC) if status_value == TaskStatus.COMPLETED else None
+    if category_updated:
+        task.category = category
     return task_repository.save_task(database, task)
 
 
 def delete_task(database: Session, task: Task) -> None:
     task_repository.delete_task(database, task)
+
+
+def get_summary(database: Session) -> dict[str, int | float]:
+    total, completed = task_repository.get_summary(database)
+    remaining = total - completed
+    percentage = round((completed / total) * 100, 1) if total else 0
+    return {
+        "total": total,
+        "completed": completed,
+        "remaining": remaining,
+        "completion_percentage": percentage,
+    }

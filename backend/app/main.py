@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.categories import router as categories_router
 from app.api.health import router as health_router
 from app.api.tasks import router as tasks_router
 from app.config import get_settings
@@ -16,4 +17,5 @@ app.add_middleware(
     allow_headers=["Content-Type"],
 )
 app.include_router(health_router, prefix="/api")
+app.include_router(categories_router, prefix="/api")
 app.include_router(tasks_router, prefix="/api")

@@ -15,11 +15,16 @@ export type Task = {
   created_at: string;
   updated_at: string;
   completed_at: string | null;
+  category: Category | null;
 };
+
+export type Category = { id: number; name: string; created_at: string };
+export type Summary = { total: number; completed: number; remaining: number; completion_percentage: number };
 
 export type TaskInput = {
   title: string;
   description?: string | null;
+  category_id?: number | null;
 };
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -60,3 +65,7 @@ export function updateTask(taskId: number, input: Partial<TaskInput> & { status?
 export function deleteTask(taskId: number): Promise<void> {
   return request<void>(`/api/tasks/${taskId}`, { method: "DELETE" });
 }
+
+export function listCategories(): Promise<Category[]> { return request<Category[]>("/api/categories"); }
+export function createCategory(name: string): Promise<Category> { return request<Category>("/api/categories", { method: "POST", body: JSON.stringify({ name }) }); }
+export function getSummary(): Promise<Summary> { return request<Summary>("/api/tasks/summary"); }
